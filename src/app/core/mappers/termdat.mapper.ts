@@ -61,7 +61,6 @@ export interface SearchEntryResponse {
 
 export interface SearchResponse {
   searchEntries?: SearchEntryResponse[];
-  totalEntryCount?: number;
 }
 
 const normalizeLanguage = (code: string | null | undefined): LanguageCode => {
@@ -144,7 +143,7 @@ const mapSearchEntry = (
 
 export const mapSearchResponse = (
   payload: SearchResponse,
-): { entries: TermdatEntry[]; totalEntryCount: number } => {
+): { entries: TermdatEntry[] } => {
   const entries = (payload.searchEntries ?? []).map((entry) => mapSearchEntry(entry));
-  return { entries, totalEntryCount: payload.totalEntryCount ?? 0 };
+  return { entries };
 };

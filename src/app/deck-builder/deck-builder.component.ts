@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import {MatButtonModule} from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LanguageCode } from '../core/models/termdat';
 import { DeckMapperService } from '../core/services/deck-mapper.service';
@@ -51,10 +51,6 @@ export class DeckBuilderComponent {
   readonly collectionsFilter = this.repository.collectionsFilter;
   readonly totalEntries = this.repository.totalEntryCount;
 
-  readonly availableTargets = computed(() =>
-    this.languages.filter(({ code }) => code !== this.sourceLanguage()),
-  );
-
   readonly collections = this.repository.collections;
   readonly entries = this.repository.entries;
   readonly collectionResource = this.repository.collectionsResource;
@@ -66,8 +62,6 @@ export class DeckBuilderComponent {
   readonly canSearch = computed(
     () => this.collectionResource.hasValue() && this.hasCollectionSelection() && this.hasTargetSelection(),
   );
-
-  readonly entryCount = computed(() => this.entries().length);
 
   onSourceLanguageChange(language: LanguageCode): void {
     if (language === this.sourceLanguage()) {

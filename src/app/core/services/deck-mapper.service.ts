@@ -33,9 +33,9 @@ export class DeckMapperService {
   buildFileName(source: LanguageCode, targets: LanguageCode[]): string {
     const targetSegment = targets.length
       ? targets
-          .filter((code) => code !== source)
-          .map((code) => code.toLowerCase())
-          .join('-')
+        .filter((code) => code !== source)
+        .map((code) => code.toLowerCase())
+        .join('-')
       : 'deck';
     return `termdat-${source.toLowerCase()}-to-${targetSegment}.tsv`;
   }

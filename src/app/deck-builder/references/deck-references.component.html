@@ -10,29 +10,24 @@
           <mat-icon>close</mat-icon>
         </button>
       </mat-chip-row>
-    }
-    <input
-      placeholder="Search and add collections"
-      [matChipInputFor]="chipGrid"
-      [matAutocomplete]="collectionsAutocomplete"
-      (input)="updateSearch($any($event.target).value)"
-      (focus)="updateSearch('')"
-      [value]="searchTerm()"
-      (blur)="clearSearchInput($event.target)"
-    >
-  </mat-chip-grid>
-    <mat-autocomplete #collectionsAutocomplete="matAutocomplete" (optionSelected)="addCollection($any($event.option.value))">
+      }
+      <input placeholder="Search and add collections" [matChipInputFor]="chipGrid"
+        [matAutocomplete]="collectionsAutocomplete" (input)="updateSearch($any($event.target).value)"
+        (focus)="updateSearch('')" [value]="searchTerm()" (blur)="clearSearchInput($event.target)">
+    </mat-chip-grid>
+    <mat-autocomplete #collectionsAutocomplete="matAutocomplete"
+      (optionSelected)="addCollection($any($event.option.value))">
       @for (collection of filteredCollections(); track collection.id) {
-        <mat-option [value]="collection.id">
-          {{ collection.name }} ({{ collection.code }})
-        </mat-option>
+      <mat-option [value]="collection.id">
+        {{ collection.name }} ({{ collection.code }})
+      </mat-option>
       }
     </mat-autocomplete>
   </mat-form-field>
   @if (collectionsLoading()) {
-    <mat-progress-spinner mode="indeterminate" diameter="22"></mat-progress-spinner>
+  <mat-progress-spinner mode="indeterminate" diameter="22"></mat-progress-spinner>
   }
   @if (collectionsError()) {
-    <p>Could not load collections. Check the endpoint or language.</p>
+  <p>Could not load collections. Check the endpoint or language.</p>
   }
 </div>

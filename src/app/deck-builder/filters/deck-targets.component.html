@@ -1,15 +1,11 @@
 <h3>Target languages</h3>
-<mat-chip-listbox multiple [disabled]="disabled()" >
+<mat-chip-listbox multiple [disabled]="disabled()">
   @for (lang of languages(); track lang.code) {
-    @if (lang.code !== sourceLanguage()) {
-      <mat-chip-option
-        [value]="lang.code"
-        [selected]="targetLanguages().includes(lang.code)"
-        [disabled]="disabled() || isLocked(lang.code)"
-        (selectionChange)="updateTargetLanguage(lang.code, $event.selected)"
-      >
-        {{ lang.label }} ({{ lang.code }})
-      </mat-chip-option>
-    }
+  @if (lang.code !== sourceLanguage()) {
+  <mat-chip-option [value]="lang.code" [selected]="targetLanguages().includes(lang.code)"
+    [disabled]="disabled() || isLocked(lang.code)" (selectionChange)="updateTargetLanguage(lang.code, $event.selected)">
+    {{ lang.label }} ({{ lang.code }})
+  </mat-chip-option>
+  }
   }
 </mat-chip-listbox>

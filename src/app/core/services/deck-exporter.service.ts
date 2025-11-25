@@ -1,4 +1,4 @@
-import { Injectable, InjectionToken } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { DeckRow } from '../models/anki';
 
 export interface DeckExporter {

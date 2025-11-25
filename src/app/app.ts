@@ -10,4 +10,4 @@ import { DeckBuilderComponent } from './deck-builder/deck-builder.component';
     class: 'app-shell',
   },
 })
-export class App {}
+export class App { }
