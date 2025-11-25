@@ -1,0 +1,11 @@
+{
+  "/termdat-search-api": {
+    "target": "https://www.termdat.bk.admin.ch",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/termdat-search-api": ""
+    }
+  }
+}

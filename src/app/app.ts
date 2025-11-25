@@ -1,12 +1,13 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { DeckBuilderComponent } from './deck-builder/deck-builder.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [DeckBuilderComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'app-shell',
+  },
 })
-export class App {
-  protected readonly title = signal('termdat-anki');
-}
+export class App {}

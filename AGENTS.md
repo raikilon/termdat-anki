@@ -45,3 +45,50 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Tests
+
+* Always use a **`setup()` helper function** that returns `{ fixture, component, injector, ... }`.
+* Use `beforeEach(() => ({ fixture, component } = setup()));` for consistent test initialization.
+* Each test must call `fixture.detectChanges()` before assertions, unless explicitly unnecessary.
+* Use **descriptive `describe` and `it` names** in natural language.
+* Favor **arrange–act–assert** structure inside each test.
+* Use **Angular’s TestBed** and **ComponentFixture** for components.
+* Use **dependency injection** via `TestBed.inject()` for services instead of manual instantiation.
+* Prefer **`By.css()`** or **`By.directive()`** for DOM queries, not `querySelector`.
+* Do **not** use deprecated APIs or legacy patterns (no `async`, no `waitForAsync`, no fakeAsync unless needed).
+* Tests must be **independent** and **stateless**.
+* When mocking dependencies, use **`jasmine.createSpyObj`** or **Angular’s `provideMock` pattern**.
+
+**Output format:**
+
+* Include the full TypeScript test file with imports.
+* Show the test suite in a ready-to-run format (e.g. `my-component.component.spec.ts`).
+
+**Example style guideline:**
+
+```ts
+const setup = () => {
+  TestBed.configureTestingModule({
+    declarations: [MyComponent],
+    providers: [{ provide: MyService, useValue: jasmine.createSpyObj('MyService', ['getData']) }],
+  });
+  const fixture = TestBed.createComponent(MyComponent);
+  const component = fixture.componentInstance;
+  return { fixture, component };
+};
+
+describe('MyComponent', () => {
+  let fixture: ComponentFixture<MyComponent>;
+  let component: MyComponent;
+
+  beforeEach(() => ({ fixture, component } = setup()));
+
+  it('should create', () => {
+    fixture.detectChanges();
+    expect(component).toBeTruthy();
+  });
+});
+```
+
+When you generate tests, match this **setup pattern**, and write clean, maintainable Angular tests.

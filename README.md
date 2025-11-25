@@ -1,59 +1,44 @@
-# TermdatAnki
+# Termdat → Anki deck builder
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.0.
+Build TSV decks for Anki from the TERMDAT terminology API. Choose source/target languages, pick one or more TERMDAT collections, and export the matching entries as a tab-separated file you can import into Anki.
 
-## Development server
+## Stack
+- Angular 21 (standalone components, signals, httpResource)
+- Angular Material (form controls, chips/autocomplete)
+- TypeScript with strict typing
+- Client-side filtering/pagination of TERMDAT search results
 
-To start a local development server, run:
+## Features
+- Language selection with enforced source/target separation
+- Multi-collection picker with chip+autocomplete UX
+- Client-side pagination that stops when collections change
+- TSV export with clean, tab-safe fields and per-language lines joined with `<br>`
 
+## Getting started
+
+### Prerequisites
+- Node.js 18+ (LTS recommended)
+- npm
+
+### Install
 ```bash
-ng serve
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### Run locally
 ```bash
-ng generate component component-name
+npm run start
 ```
+- App: http://localhost:4200
+- Uses `proxy.conf.json` to reach the TERMDAT API (ensure the proxy target is reachable in your environment).
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+### Build
 ```bash
-ng generate --help
+npm run build
 ```
+Outputs production assets to `dist/`.
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Usage tips
+- Select a source language; target chips auto-exclude the source and require at least one target.
+- Use the collections field to search/add collections; remove chips to narrow results.
+- Export when entries are loaded; the TSV is ready to import into Anki.

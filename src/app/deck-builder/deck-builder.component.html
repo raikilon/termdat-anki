@@ -1,0 +1,44 @@
+<mat-card appearance="outlined">
+  <mat-card-header class="m-5">
+    <mat-card-title>Build a TERMDAT deck</mat-card-title>
+    <mat-card-subtitle>
+      Fetch entries from the TERMDAT search API with collection filters, then export a TSV file that you
+      can import straight into Anki.
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+
+    <app-deck-source [languages]="languages" [sourceLanguage]="sourceLanguage()"
+      (sourceLanguageChange)="onSourceLanguageChange($event)"></app-deck-source>
+
+    @if (collectionResource.isLoading()) {
+    <div>
+      <mat-progress-spinner mode="indeterminate" diameter="26"></mat-progress-spinner>
+      <p>Loading collections for {{ sourceLanguage() }}…</p>
+    </div>
+    } @else if (collectionResource.error()) {
+    <p>Could not load collections. Check the endpoint or language.</p>
+    } @else {
+    <app-deck-targets [languages]="languages" [sourceLanguage]="sourceLanguage()" [targetLanguages]="targetLanguages()"
+      (targetLanguagesChange)="onTargetLanguagesChange($event)"></app-deck-targets>
+
+    <app-deck-references [collections]="collections()" [collectionIds]="collectionsFilter()"
+      (collectionIdsChange)="onCollectionIdsChange($event)" [collectionsLoading]="collectionResource.isLoading()"
+      [collectionsError]="collectionResource.error()"></app-deck-references>
+    }
+    <div style="margin-bottom: 10px;">
+      @if (!hasCollectionSelection()) {
+      Select at least one collection to load entries
+      } @else if (isLoadingData()) {
+      <mat-progress-spinner mode="indeterminate" diameter="26"></mat-progress-spinner>
+      }
+    </div>
+    <div>
+      <button matButton="outlined" [disabled]="!canSearch() || isLoadingData() || totalEntries() === 0"
+        (click)="onExport()">
+        Download {{ totalEntries() }} elements for Anki
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
