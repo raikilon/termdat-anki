@@ -1,37 +1,19 @@
 import { httpResource } from '@angular/common/http';
-import { Injectable, computed, signal } from '@angular/core';
-import { TERMDAT_API_DIRECT_BASE } from '../../termdat.config';
-import { Collection, LanguageCode, TermdatEntry } from '../models/termdat';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Collection, LanguageCode, SearchFilters, TermdatEntry } from '../models/termdat';
 import {
   CollectionResponse,
-  LANGUAGE_ID_BY_CODE,
   SearchResponse,
   mapCollection,
   mapSearchResponse,
   sortByName,
 } from '../mappers/termdat.mapper';
-
-const SEARCH_DISABLED_FIELDS = [
-  'fields.term',
-  'fields.name',
-  'fields.abbreviation',
-  'fields.phraseology',
-  'fields.definition',
-  'fields.note',
-  'fields.context',
-  'fields.source',
-  'fields.metadata',
-  'fields.country',
-  'fields.comment',
-] as const;
+import { TermdatApiService } from './termdat.api';
 
 @Injectable({ providedIn: 'root' })
 export class TermdatRepository {
-  private readonly apiDirectBase = TERMDAT_API_DIRECT_BASE;
-  private static readonly SEARCH_PAGE_SIZE = 100;
+  private readonly api = inject(TermdatApiService);
   private searchRunId = 0;
-  private lastSearchRunId = 0;
-  private lastEntries: TermdatEntry[] = [];
   private paginationPromise: Promise<void> | undefined;
   private loadingAllData = signal(false);
 
@@ -44,7 +26,7 @@ export class TermdatRepository {
   );
 
   readonly collectionsResource = httpResource<Collection[]>(
-    () => this.buildCollectionsRequest(),
+    () => this.api.buildCollectionsRequest(this.sourceLanguage()),
     {
       defaultValue: [],
       parse: (value) => {
@@ -64,20 +46,19 @@ export class TermdatRepository {
   readonly collections = computed(() => this.collectionsResource.value() ?? []);
   readonly entries = computed(() => this.searchResource.value() ?? []);
 
-  constructor() {
-    this.collectionsResource.reload();
+  private currentFilters(): SearchFilters {
+    return {
+      sourceLanguage: this.sourceLanguage(),
+      targetLanguages: this.targetLanguages(),
+      collections: this.collectionsFilter(),
+    };
   }
 
-  private buildSearchUrl(
-    pageIndex: number = 1,
-    pageSize: number = TermdatRepository.SEARCH_PAGE_SIZE,
-  ): string | undefined {
-    const params = this.buildSearchParams(pageIndex, pageSize);
-    if (!params) {
+  private buildSearchUrl(pageIndex: number = 1): string | undefined {
+    if (!this.collectionsResource.hasValue()) {
       return undefined;
     }
-    const query = params.toString();
-    return `${this.apiDirectBase}/api/Search/Search?${query}`;
+    return this.api.buildSearchUrl(this.currentFilters(), pageIndex, this.api.pageSize);
   }
 
   async fetchAllEntries(limit: number): Promise<TermdatEntry[]> {
@@ -95,50 +76,7 @@ export class TermdatRepository {
     if (this.paginationPromise) {
       await this.paginationPromise;
     }
-    if (this.lastSearchRunId !== this.searchRunId) {
-      return [];
-    }
-    return this.lastEntries.slice(0, cappedLimit);
-  }
-
-  private buildCollectionsRequest(): { url: string; headers: Record<string, string> } {
-    return {
-      url: `${this.apiDirectBase}/api/Collection`,
-      headers: {
-        'Accept-Language': this.sourceLanguage(),
-      },
-    };
-  }
-
-  private buildSearchParams(pageIndex: number, pageSize: number): URLSearchParams | undefined {
-    const selectedCollections = this.collectionsFilter();
-    const selectedTargets = this.targetLanguages();
-    if (
-      !this.collectionsResource.hasValue() ||
-      selectedCollections.length === 0 ||
-      selectedTargets.length === 0
-    ) {
-      return undefined;
-    }
-    const params = new URLSearchParams();
-    params.set('pageindex', String(pageIndex));
-    params.set('pagesize', String(pageSize));
-    const sourceId = LANGUAGE_ID_BY_CODE[this.sourceLanguage()];
-    if (sourceId) {
-      params.set('sourceLanguageIds', String(sourceId));
-    }
-    this.targetLanguages()
-      .map((code) => LANGUAGE_ID_BY_CODE[code])
-      .filter((value): value is number => Number.isFinite(value))
-      .forEach((id) => params.append('targetLanguageIds', String(id)));
-    this.collectionsFilter()
-      .filter((id) => Number.isFinite(id))
-      .forEach((id) => params.append('collections', String(id)));
-    params.set('collectionsPriority', 'true');
-    params.set('status', '1');
-    params.set('statusPriority', 'true');
-    SEARCH_DISABLED_FIELDS.forEach((field) => params.set(field, 'false'));
-    return params;
+    return this.entries().slice(0, cappedLimit);
   }
 
   private parseSearch(value: unknown): TermdatEntry[] {
@@ -152,12 +90,10 @@ export class TermdatRepository {
     } = this.filterEntriesByCollection(entries, allowedCollections);
     const runId = ++this.searchRunId;
     this.loadingAllData.set(false);
-    this.lastEntries = filteredEntries;
-    this.lastSearchRunId = runId;
     this.totalEntryCount.set(filteredEntries.length);
     this.paginationPromise = undefined;
     const pageEntryCount = payload.searchEntries?.length ?? 0;
-    if (!collectionChanged && filteredEntries.length && pageEntryCount >= TermdatRepository.SEARCH_PAGE_SIZE) {
+    if (!collectionChanged && filteredEntries.length && pageEntryCount >= this.api.pageSize) {
       this.loadingAllData.set(true);
       this.paginationPromise = this.paginateSearch(
         runId,
@@ -171,16 +107,11 @@ export class TermdatRepository {
   }
 
   private async fetchSearchPageEntries(pageIndex: number): Promise<TermdatEntry[]> {
-    const url = this.buildSearchUrl(pageIndex, TermdatRepository.SEARCH_PAGE_SIZE);
+    const url = this.buildSearchUrl(pageIndex);
     if (!url) {
       return [];
     }
-    const response = await fetch(url, { headers: { accept: 'application/json' } });
-    if (!response.ok) {
-      throw new Error(`Search request failed with status ${response.status}`);
-    }
-    const payload = (await response.json()) as SearchResponse;
-    return mapSearchResponse(payload).entries;
+    return this.api.fetchSearchPage(this.currentFilters(), pageIndex, this.api.pageSize);
   }
 
   private async paginateSearch(
@@ -213,7 +144,7 @@ export class TermdatRepository {
       }
       if (
         collectionChanged ||
-        pageEntries.length < TermdatRepository.SEARCH_PAGE_SIZE
+        pageEntries.length < this.api.pageSize
       ) {
         break;
       }
@@ -223,8 +154,6 @@ export class TermdatRepository {
     if (runId === this.searchRunId) {
       this.searchResource.set(aggregated);
       this.totalEntryCount.set(aggregated.length);
-      this.lastEntries = aggregated;
-      this.lastSearchRunId = runId;
     }
     this.loadingAllData.set(false);
     this.paginationPromise = undefined;
@@ -250,7 +179,7 @@ export class TermdatRepository {
       }
       if (entryCollectionId !== undefined && !allowedCollectionIds.has(entryCollectionId)) {
         collectionChanged = true;
-        break;
+        continue;
       }
       filtered.push(entry);
     }

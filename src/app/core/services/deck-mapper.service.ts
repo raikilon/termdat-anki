@@ -8,10 +8,17 @@ export class DeckMapperService {
     if (!entries?.length) {
       return [];
     }
-    const normalizedTargets = targets.filter((code) => code !== source);
+
+    const normalizedTargets = this.normalizeTargets(source, targets);
+
     return entries
       .map((entry) => {
         const sourceDetail = this.pickLanguage(entry, source);
+
+        const front = this.summarize(sourceDetail);
+        const definition = this.extractDefinition(sourceDetail);
+        const url = this.cleanInline(entry.url ?? '');
+
         const backLines = normalizedTargets
           .map((code) => {
             const detail = this.pickLanguage(entry, code);
@@ -19,35 +26,37 @@ export class DeckMapperService {
             return text ? `${code}: ${text}` : '';
           })
           .filter(Boolean);
-        const back = this.joinLines(backLines);
-        return {
-          front: this.summarize(sourceDetail),
-          back: back || '—',
-          definition: this.extractDefinition(sourceDetail),
-          url: this.cleanInline(entry.url ?? ''),
-        };
+
+        const back = this.joinLines(backLines) || '—';
+
+        return { front, back, definition, url };
       })
       .filter((row) => !!row.front || !!row.back);
   }
 
   buildFileName(source: LanguageCode, targets: LanguageCode[]): string {
-    const targetSegment = targets.length
-      ? targets
-        .filter((code) => code !== source)
-        .map((code) => code.toLowerCase())
-        .join('-')
+    const normalizedTargets = this.normalizeTargets(source, targets);
+
+    const targetSegment = normalizedTargets.length
+      ? normalizedTargets.map((code) => code.toLowerCase()).join('-')
       : 'deck';
+
     return `termdat-${source.toLowerCase()}-to-${targetSegment}.tsv`;
   }
 
+  private normalizeTargets(source: LanguageCode, targets: LanguageCode[]): LanguageCode[] {
+    return (targets ?? []).filter((code) => code !== source);
+  }
+
   private pickLanguage(entry: TermdatEntry, code: LanguageCode): TermdatLanguageDetail | undefined {
-    return entry.languageDetails.find((detail) => detail.languageCode === code);
+    return entry.languageDetails?.find((detail) => detail.languageCode === code);
   }
 
   private summarize(detail: TermdatLanguageDetail | undefined): string {
     if (!detail) {
       return '';
     }
+
     const candidate =
       detail.terminus ||
       detail.name ||
@@ -56,6 +65,7 @@ export class DeckMapperService {
       detail.definition ||
       detail.note ||
       '';
+
     return this.cleanInline(candidate);
   }
 
@@ -63,6 +73,7 @@ export class DeckMapperService {
     if (!detail) {
       return '';
     }
+
     const candidate = detail.definition || detail.context || detail.note || '';
     return this.cleanInline(candidate);
   }
@@ -75,6 +86,9 @@ export class DeckMapperService {
   }
 
   private cleanInline(value: string): string {
+    if (!value) {
+      return '';
+    }
     return value.replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
   }
 }
