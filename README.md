@@ -1,6 +1,6 @@
 # Termdat → Anki deck builder
 
-Build TSV decks for Anki from the TERMDAT terminology API. Choose source/target languages, pick one or more TERMDAT collections, and export the matching entries as a tab-separated file you can import into Anki.
+Build TSV decks for Anki from the [TERMDAT terminology API](https://www.termdat.bk.admin.ch/). Choose source/target languages, pick one or more TERMDAT collections, and export the matching entries as a tab-separated file you can import into [Anki](https://apps.ankiweb.net/).
 
 ## Stack
 - Angular 21 (standalone components, signals, httpResource)
